@@ -168,55 +168,46 @@
 
   }
 
+function groupData(rows) {
+  // Keep only meaningful rows
+  const clean = rows.filter(r => {
+    const u = (r[USER_FIELD] || "").trim();
+    const d = parseDate(r[DATE_FIELD]);
+    const w = Number(String(r[WORDS_FIELD] || "").replace(/,/g,""));
+    return u && d && !Number.isNaN(w);
+  });
 
-  function groupData(rows) {
+  // Aggregate by user->date, summing same-day entries
+  const byUser = {};
+  clean.forEach(r => {
+    const user = (r[USER_FIELD] || "").trim();
+    const key  = parseDate(r[DATE_FIELD]).toISOString().slice(0,10);
+    const val  = Number(String(r[WORDS_FIELD] || "").replace(/,/g,""));
+    byUser[user] ??= {};
+    byUser[user][key] = (byUser[user][key] || 0) + val;
+  });
 
-    // Aggregate by user -> date (sum daily words), then compute cumulative
+  // For each user, detect whether their numbers look like DAILY ADDS or CUMULATIVE TOTALS.
+  const series = {};
+  Object.entries(byUser).forEach(([user, dateMap]) => {
+    const dates = Object.keys(dateMap).sort();
+    // Peek at monotonicity to guess type
+    let nonDecreasing = true;
+    for (let i = 1; i < dates.length; i++) {
+      if (dateMap[dates[i]] < dateMap[dates[i-1]]) { nonDecreasing = false; break; }
+    }
 
-    const byUser = {};
-
-    rows.forEach(r => {
-
-      const user = (r[USER_FIELD] || "").trim();
-
-      const dt   = parseDate(r[DATE_FIELD]);
-
-      const add  = Number(String(r[WORDS_FIELD] || "0").replace(/,/g,""));
-
-      if (!user || !dt || isNaN(add)) return;
-
-      const key = dt.toISOString().slice(0,10);
-
-      byUser[user] ??= {};
-
-      byUser[user][key] = (byUser[user][key] || 0) + add;
-
+    let running = 0;
+    series[user] = dates.map(d => {
+      const raw = dateMap[d];
+      const added = nonDecreasing ? (raw - (running || 0)) : raw;
+      running = nonDecreasing ? raw : (running + raw);
+      return { date: d, added: Math.max(0, added), total: running };
     });
+  });
 
-
-    // Create cumulative arrays per user
-
-    const series = {};
-
-    Object.entries(byUser).forEach(([user, datesObj]) => {
-
-      const dates = Object.keys(datesObj).sort();
-
-      let running = 0;
-
-      series[user] = dates.map(d => {
-
-        running += datesObj[d];
-
-        return { date: d, total: running, added: datesObj[d] };
-
-      });
-
-    });
-
-    return series;
-
-  }
+  return series;
+}
 
 
   function buildAllLabels(series) {
