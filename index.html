@@ -5,6 +5,7 @@
   <title>Team Word Counts</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
     :root { color-scheme: light dark; }
@@ -148,21 +149,30 @@
                      "#0ea5e9","#f97316","#22c55e","#eab308","#a855f7"];
     return palette[i % palette.length];
   }
-
 function renderChart(series, selectedUser="__ALL__") {
   const ctx = document.getElementById('chart').getContext('2d');
   if (chart) { chart.destroy(); chart = null; }
 
-  let labels = [];
-  let datasets = [];
+  // Build user datasets as XY points (x = date string, y = total)
   const users = Object.keys(series).sort();
+  let datasets = [];
+  let allPoints = [];
+
+  function userPoints(user) {
+    return (series[user] || []).map(p => {
+      const x = new Date(p.date); // p.date is "YYYY-MM-DD"
+      const y = p.total;
+      allPoints.push(x);
+      return { x, y };
+    });
+  }
 
   if (selectedUser === "__ALL__") {
-    labels = buildAllLabels(series);
     users.forEach((u, i) => {
+      const pts = userPoints(u);
       datasets.push({
         label: u,
-        data: toDataset(u, labels, series),
+        data: pts,
         borderColor: pickColor(i),
         backgroundColor: "transparent",
         borderWidth: 2,
@@ -172,35 +182,44 @@ function renderChart(series, selectedUser="__ALL__") {
       });
     });
   } else {
-    const points = series[selectedUser] || [];
-    labels = points.map(p => p.date);
-    datasets = [{
+    const pts = userPoints(selectedUser);
+    datasets.push({
       label: selectedUser,
-      data: points.map(p => p.total),
+      data: pts,
       borderColor: pickColor(0),
       backgroundColor: "transparent",
       borderWidth: 3,
       tension: 0.2,
       pointRadius: 3
-    }];
+    });
   }
 
-  // === Add GOAL LINES ===
-  const start = "2025-10-10";
-  const end   = "2025-11-10";
+  // === GOAL LINES over real time ===
+  const start = new Date("2025-10-10");
+  const end   = new Date("2025-11-10");
+  const msSpan = end - start;
   const goalTargets = [10000, 25000, 50000];
-  const dashColors = ["#9ca3af", "#d1d5db", "#6b7280"]; // subtle grey variations
+  const dashColors  = ["#9ca3af","#d1d5db","#6b7280"];
+
+  // generate a point per day between start and end for each goal
+  function daysBetween(a, b) {
+    const d = [];
+    for (let t = new Date(a); t <= b; t.setUTCDate(t.getUTCDate()+1)) {
+      d.push(new Date(t));
+    }
+    return d;
+  }
+  const goalXs = daysBetween(start, end);
+  goalXs.forEach(x => allPoints.push(x));
 
   goalTargets.forEach((target, i) => {
+    const data = goalXs.map(x => {
+      const t = (x - start) / msSpan; // 0..1
+      return { x, y: Math.max(0, target * t) };
+    });
     datasets.push({
       label: `Goal ${target.toLocaleString()}`,
-      data: labels.map(d => {
-        if (d < start || d > end) return null;
-        const startTime = new Date(start).getTime();
-        const endTime   = new Date(end).getTime();
-        const t         = (new Date(d).getTime() - startTime) / (endTime - startTime);
-        return Math.max(0, target * t); // 0→target ramp
-      }),
+      data,
       borderColor: dashColors[i],
       borderWidth: 1.5,
       borderDash: [6,4],
@@ -212,17 +231,19 @@ function renderChart(series, selectedUser="__ALL__") {
 
   chart = new Chart(ctx, {
     type: 'line',
-    data: { labels, datasets },
+    data: { datasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      parsing: false, // we’re supplying {x,y} points
       scales: {
-        x: { ticks: { maxRotation: 0, autoSkip: true } },
+        x: {
+          type: 'time',
+          time: { unit: 'day' }
+        },
         y: { beginAtZero: true }
       },
-      plugins: {
-        legend: { display: true }
-      },
+      plugins: { legend: { display: true } },
       animation: false
     }
   });
