@@ -149,57 +149,85 @@
     return palette[i % palette.length];
   }
 
-  function renderChart(series, selectedUser="__ALL__") {
-    const ctx = document.getElementById('chart').getContext('2d');
-    if (chart) { chart.destroy(); chart = null; }
+function renderChart(series, selectedUser="__ALL__") {
+  const ctx = document.getElementById('chart').getContext('2d');
+  if (chart) { chart.destroy(); chart = null; }
 
-    let labels = [];
-    let datasets = [];
-    const users = Object.keys(series).sort();
+  let labels = [];
+  let datasets = [];
+  const users = Object.keys(series).sort();
 
-    if (selectedUser === "__ALL__") {
-      labels = buildAllLabels(series);
-      users.forEach((u, i) => {
-        datasets.push({
-          label: u,
-          data: toDataset(u, labels, series),
-          borderColor: pickColor(i),
-          backgroundColor: "transparent",
-          borderWidth: 2,
-          spanGaps: true,
-          tension: 0.2,
-          pointRadius: 2
-        });
-      });
-    } else {
-      const points = series[selectedUser] || [];
-      labels = points.map(p => p.date);
-      datasets = [{
-        label: selectedUser,
-        data: points.map(p => p.total),
-        borderColor: pickColor(0),
+  if (selectedUser === "__ALL__") {
+    labels = buildAllLabels(series);
+    users.forEach((u, i) => {
+      datasets.push({
+        label: u,
+        data: toDataset(u, labels, series),
+        borderColor: pickColor(i),
         backgroundColor: "transparent",
-        borderWidth: 3,
+        borderWidth: 2,
+        spanGaps: true,
         tension: 0.2,
-        pointRadius: 3
-      }];
-    }
-
-    chart = new Chart(ctx, {
-      type: 'line',
-      data: { labels, datasets },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false, // we control height via CSS .chart-wrap
-        scales: {
-          x: { ticks: { maxRotation: 0, autoSkip: true } },
-          y: { beginAtZero: true }
-        },
-        plugins: { legend: { display: true } },
-        animation: false
-      }
+        pointRadius: 2
+      });
     });
+  } else {
+    const points = series[selectedUser] || [];
+    labels = points.map(p => p.date);
+    datasets = [{
+      label: selectedUser,
+      data: points.map(p => p.total),
+      borderColor: pickColor(0),
+      backgroundColor: "transparent",
+      borderWidth: 3,
+      tension: 0.2,
+      pointRadius: 3
+    }];
   }
+
+  // === Add GOAL LINES ===
+  const start = "2025-10-10";
+  const end   = "2025-11-10";
+  const goalTargets = [10000, 25000, 50000];
+  const dashColors = ["#9ca3af", "#d1d5db", "#6b7280"]; // subtle grey variations
+
+  goalTargets.forEach((target, i) => {
+    datasets.push({
+      label: `Goal ${target.toLocaleString()}`,
+      data: labels.map(d => {
+        if (d < start || d > end) return null;
+        const startTime = new Date(start).getTime();
+        const endTime   = new Date(end).getTime();
+        const t         = (new Date(d).getTime() - startTime) / (endTime - startTime);
+        return Math.max(0, target * t); // 0→target ramp
+      }),
+      borderColor: dashColors[i],
+      borderWidth: 1.5,
+      borderDash: [6,4],
+      pointRadius: 0,
+      fill: false,
+      tension: 0
+    });
+  });
+
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { ticks: { maxRotation: 0, autoSkip: true } },
+        y: { beginAtZero: true }
+      },
+      plugins: {
+        legend: { display: true }
+      },
+      animation: false
+    }
+  });
+}
+
 
   function renderTable(series, user) {
     const container = document.getElementById('tableContainer');
