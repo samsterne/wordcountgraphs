@@ -1,500 +1,292 @@
-
-
 <!doctype html>
-
 <html lang="en">
-
 <head>
-
   <meta charset="utf-8" />
-
   <title>Team Word Counts</title>
-
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <!-- Chart.js & Papa Parse (CSV) from CDN -->
-
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-
   <style>
-
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 2rem; }
-
-    .row { display: grid; gap: 1rem; grid-template-columns: 1fr; max-width: 960px; }
-
-    @media (min-width: 900px){ .row { grid-template-columns: 2fr 1fr; } }
-
-    header { margin-bottom: 1rem; }
-
-    select, button { padding: 0.6rem 0.8rem; }
-
-    .card { border: 1px solid #ddd; border-radius: 10px; padding: 1rem; }
-
-    .muted { color:#666; font-size: 0.9rem; }
-
-    .controls { display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center; }
-
-    .grid { display:grid; gap:0.5rem; }
-
-    table { width:100%; border-collapse: collapse; }
-
-    th, td { border-bottom: 1px solid #eee; padding: 0.4rem 0; text-align:left; }
-
-    .pill { display:inline-block; padding:0.2rem 0.5rem; border:1px solid #ddd; border-radius:999px; font-size:0.85rem;}
-
+    :root { color-scheme: light dark; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; }
+    header { max-width: 960px; margin: 0 auto 16px; }
+    .muted { color: #666; font-size: 0.95rem; }
+    .row { max-width: 960px; margin: 0 auto; display: grid; gap: 16px; grid-template-columns: 1fr; }
+    @media (min-width: 900px) { .row { grid-template-columns: 2fr 1fr; } }
+    .card { border: 1px solid #ddd; border-radius: 12px; padding: 16px; background: #fff; }
+    .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+    select, button, a.pill { padding: 8px 12px; border-radius: 999px; border: 1px solid #ddd; background: #fafafa; text-decoration: none; }
+    button { cursor: pointer; }
+    .grid { display: grid; gap: 8px; }
+    .chart-wrap { position: relative; width: 100%; height: 420px; /* fixes ballooning */ }
+    canvas#chart { width: 100% !important; height: 100% !important; display: block; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+    th, td { padding: 6px 8px; border-bottom: 1px solid #eee; text-align: left; }
   </style>
-
 </head>
-
 <body>
-
   <header>
-
     <h1>Team Word Counts</h1>
-
-    <p class="muted">Submit your daily words via the Google Form. Select a user to view their cumulative progress, or “All users” for a comparison.</p>
-
+    <p class="muted">Submit your daily words via the Google Form. Select a user to view their cumulative progress, or “All users” for comparison.</p>
   </header>
 
-
   <div class="row">
-
     <div class="card">
-
       <div class="controls">
-
         <label for="userSelect">User:</label>
-
         <select id="userSelect">
-
           <option value="__ALL__">All users</option>
-
-          <!-- Replace with your actual user list for nicer defaults -->
-
-          <option>Alex</option><option>Brooke</option><option>Casey</option>
-
-          <option>Dev</option><option>Eli</option><option>Frankie</option>
-
-          <option>Harper</option><option>Jordan</option><option>Kai</option><option>Riley</option>
-
         </select>
-
         <button id="refreshBtn">Refresh</button>
-
         <button id="downloadPngBtn">Download Chart PNG</button>
-
         <a id="downloadCsvLink" class="pill" href="#" target="_blank" rel="noopener">Download CSV</a>
-
       </div>
-
-      <canvas id="chart" height="120"></canvas>
-
+      <div class="chart-wrap">
+        <canvas id="chart"></canvas>
+      </div>
     </div>
 
-
     <div class="card">
-
       <h3>Submit Words</h3>
-
-      <p class="muted">
-
-        Use the Google Form to add today’s words. It can take a few seconds to appear here after you submit.
-
-      </p>
-
+      <p class="muted">Use the Google Form to add today’s words. It can take up to a minute to appear after you submit.</p>
       <p><a id="formLink" href="#" target="_blank" rel="noopener">Open submission form →</a></p>
 
-
-      <h3 style="margin-top:1.5rem;">Recent Entries</h3>
-
+      <h3 style="margin-top:1rem;">Recent Entries</h3>
       <div id="recentContainer" class="grid"></div>
-
     </div>
-
   </div>
 
-
-  <div class="card" style="margin-top:1rem;">
-
-    <h3>Raw Data (active user)</h3>
-
-    <div id="tableContainer"></div>
-
+  <div class="card" style="max-width: 960px; margin: 16px auto 0;">
+    <h3>Raw Data (selected user)</h3>
+    <div id="tableContainer"><p class="muted">Select a user to see entries.</p></div>
   </div>
-
 
 <script>
-
   // === CONFIG ===
-
-  const PUBLISHED_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQS4yybk3Wsrk3XhQoX-3QA80iWwPZQPjPMTZ5qDMXghIXAPBjdw8ICnCAPOhoxibN48gDDhxjCjULE/pub?gid=1623176752&single=true&output=csv";  // e.g. https://docs.google.com/spreadsheets/d/e/.../pub?output=csv
-
-  const GOOGLE_FORM_URL   = "https://docs.google.com/forms/d/e/1FAIpQLScT0CMZIyr5PYM5i3ZkyPmm-sEF0JCjXTFhZwZ88LT3GjEvwg/viewform?usp=sharing&ouid=112161238198849026052";    // optional: link to your form
-
-  const USER_FIELD        = "User";                         // must match your Form/Sheet header
-
-  const DATE_FIELD        = "Date";                         // can be textual; we'll parse
-
-  const WORDS_FIELD       = "Word Count";            // numeric field
-
+  const PUBLISHED_CSV_URL = "YOUR_PUBLISHED_CSV_URL_HERE"; // responses CSV (File → Publish to web → CSV)
+  const GOOGLE_FORM_URL   = "YOUR_GOOGLE_FORM_URL_HERE";   // optional: your Google Form
+  const USER_FIELD        = "User";
+  const DATE_FIELD        = "Date";        // in DD/MM/YYYY (per your sample)
+  const WORDS_FIELD       = "Word Count";  // cumulative totals (your current setup)
+  const TS_FIELD          = "Timestamp";   // optional, used for Recent
 
   document.getElementById('downloadCsvLink').href = PUBLISHED_CSV_URL;
-
   if (GOOGLE_FORM_URL) document.getElementById('formLink').href = GOOGLE_FORM_URL;
 
+  let allRows = [];
+  let chart = null;
 
-  let allRows = [];       // parsed CSV rows as objects
-
-  let chart;
-
-
-  function parseDate(d) {
-
-    // try to parse various date formats
-
-    const try1 = new Date(d);
-
-    if (!isNaN(try1)) return new Date(try1.getFullYear(), try1.getMonth(), try1.getDate());
-
-    // fallback: split yyyy-mm-dd or dd/mm/yyyy
-
-    const m = String(d).match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-
+  function parseEUDate(s) {
+    // Accept DD/MM/YYYY or D/M/YYYY; also try ISO YYYY-MM-DD
+    if (!s) return null;
+    const iso = String(s).trim();
+    let m = iso.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (m) return new Date(+m[3], +m[2]-1, +m[1]);
+    m = iso.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
     if (m) return new Date(+m[1], +m[2]-1, +m[3]);
-
-    return null;
-
+    const d = new Date(iso); // last resort
+    return isNaN(d) ? null : new Date(d.getFullYear(), d.getMonth(), d.getDate());
   }
 
-function groupData(rows) {
-  // Keep only meaningful rows
-  const clean = rows.filter(r => {
-    const u = (r[USER_FIELD] || "").trim();
-    const d = parseDate(r[DATE_FIELD]);
-    const w = Number(String(r[WORDS_FIELD] || "").replace(/,/g,""));
-    return u && d && !Number.isNaN(w);
-  });
+  function numify(x) {
+    if (x == null) return NaN;
+    return Number(String(x).replace(/[^\d\.\-]/g, ''));
+  }
 
-  // Aggregate by user->date, summing same-day entries
-  const byUser = {};
-  clean.forEach(r => {
-    const user = (r[USER_FIELD] || "").trim();
-    const key  = parseDate(r[DATE_FIELD]).toISOString().slice(0,10);
-    const val  = Number(String(r[WORDS_FIELD] || "").replace(/,/g,""));
-    byUser[user] ??= {};
-    byUser[user][key] = (byUser[user][key] || 0) + val;
-  });
-
-  // For each user, detect whether their numbers look like DAILY ADDS or CUMULATIVE TOTALS.
-  const series = {};
-  Object.entries(byUser).forEach(([user, dateMap]) => {
-    const dates = Object.keys(dateMap).sort();
-    // Peek at monotonicity to guess type
-    let nonDecreasing = true;
-    for (let i = 1; i < dates.length; i++) {
-      if (dateMap[dates[i]] < dateMap[dates[i-1]]) { nonDecreasing = false; break; }
-    }
-
-    let running = 0;
-    series[user] = dates.map(d => {
-      const raw = dateMap[d];
-      const added = nonDecreasing ? (raw - (running || 0)) : raw;
-      running = nonDecreasing ? raw : (running + raw);
-      return { date: d, added: Math.max(0, added), total: running };
+  function groupData(rows) {
+    // Clean rows
+    const valid = rows.filter(r => {
+      const u = (r[USER_FIELD] || "").trim();
+      const d = parseEUDate(r[DATE_FIELD]);
+      const w = numify(r[WORDS_FIELD]);
+      return u && d && !Number.isNaN(w);
     });
-  });
 
-  return series;
-}
+    // Aggregate by user/date (sum same-day entries)
+    const byUser = {};
+    valid.forEach(r => {
+      const user = (r[USER_FIELD] || "").trim();
+      const key  = parseEUDate(r[DATE_FIELD]).toISOString().slice(0,10);
+      const val  = numify(r[WORDS_FIELD]);
+      byUser[user] ??= {};
+      byUser[user][key] = (byUser[user][key] || 0) + val;
+    });
 
+    // For each user, detect if values look like cumulative totals (non-decreasing)
+    const series = {};
+    Object.entries(byUser).forEach(([user, dateMap]) => {
+      const dates = Object.keys(dateMap).sort();
+      let nonDecreasing = true;
+      for (let i=1; i<dates.length; i++) {
+        if (dateMap[dates[i]] < dateMap[dates[i-1]]) { nonDecreasing = false; break; }
+      }
+      let running = 0;
+      series[user] = dates.map(d => {
+        const raw = dateMap[d];
+        const added = nonDecreasing ? (raw - (running || 0)) : raw;
+        running = nonDecreasing ? raw : (running + raw);
+        return { date: d, added: Math.max(0, added), total: running };
+      });
+    });
+
+    return series;
+  }
 
   function buildAllLabels(series) {
-
-    // Union of all dates across users for aligned comparison
-
     const set = new Set();
-
     Object.values(series).forEach(arr => arr.forEach(p => set.add(p.date)));
-
     return Array.from(set).sort();
-
   }
 
-
-  function toDataset(user, labels, series, color) {
-
-    const map = new Map((series[user]||[]).map(p => [p.date, p.total]));
-
+  function toDataset(user, labels, series) {
+    const map = new Map((series[user] || []).map(p => [p.date, p.total]));
     return labels.map(d => map.get(d) ?? null);
-
   }
-
 
   function pickColor(i) {
-
-    const palette = [
-
-      "#2563eb","#16a34a","#f59e0b","#ef4444","#7c3aed",
-
-      "#0ea5e9","#f97316","#22c55e","#eab308","#a855f7"
-
-    ];
-
+    const palette = ["#2563eb","#16a34a","#f59e0b","#ef4444","#7c3aed",
+                     "#0ea5e9","#f97316","#22c55e","#eab308","#a855f7"];
     return palette[i % palette.length];
-
   }
-
 
   function renderChart(series, selectedUser="__ALL__") {
-
     const ctx = document.getElementById('chart').getContext('2d');
+    if (chart) { chart.destroy(); chart = null; }
 
-
-    if (chart) chart.destroy();
-
-
-    let labels;
-
+    let labels = [];
     let datasets = [];
-
-
     const users = Object.keys(series).sort();
 
-
     if (selectedUser === "__ALL__") {
-
       labels = buildAllLabels(series);
-
       users.forEach((u, i) => {
-
         datasets.push({
-
           label: u,
-
           data: toDataset(u, labels, series),
-
           borderColor: pickColor(i),
-
           backgroundColor: "transparent",
-
           borderWidth: 2,
-
           spanGaps: true,
-
-          tension: 0.2
-
+          tension: 0.2,
+          pointRadius: 2
         });
-
       });
-
     } else {
-
-      labels = (series[selectedUser] || []).map(p => p.date);
-
+      const points = series[selectedUser] || [];
+      labels = points.map(p => p.date);
       datasets = [{
-
         label: selectedUser,
-
-        data: (series[selectedUser] || []).map(p => p.total),
-
+        data: points.map(p => p.total),
         borderColor: pickColor(0),
-
         backgroundColor: "transparent",
-
         borderWidth: 3,
-
-        tension: 0.2
-
+        tension: 0.2,
+        pointRadius: 3
       }];
-
     }
-
 
     chart = new Chart(ctx, {
-
       type: 'line',
-
       data: { labels, datasets },
-
       options: {
-
         responsive: true,
-
-        maintainAspectRatio: false,
-
+        maintainAspectRatio: false, // we control height via CSS .chart-wrap
         scales: {
-
           x: { ticks: { maxRotation: 0, autoSkip: true } },
-
           y: { beginAtZero: true }
-
         },
-        scales: { y: { beginAtZero: true } }
-
-        plugins: {
-
-          legend: { display: true }
-
-        }
-
+        plugins: { legend: { display: true } },
+        animation: false
       }
-
     });
-
   }
-
 
   function renderTable(series, user) {
-
     const container = document.getElementById('tableContainer');
-
     if (user === "__ALL__" || !series[user] || series[user].length === 0) {
-
-      container.innerHTML = '<p class="muted">Select a user to see their raw entries.</p>';
-
+      container.innerHTML = '<p class="muted">Select a user to see their entries.</p>';
       return;
-
     }
-
     const rows = series[user].map(p => `<tr><td>${p.date}</td><td>${p.added}</td><td>${p.total}</td></tr>`).join("");
-
     container.innerHTML = `
-
       <table>
-
         <thead><tr><th>Date</th><th>Added</th><th>Cumulative</th></tr></thead>
-
         <tbody>${rows}</tbody>
-
       </table>`;
-
   }
 
-
-function renderRecent(rows) {
-  const container = document.getElementById('recentContainer');
-  const valid = rows.filter(r =>
-    (r[USER_FIELD] || "").trim() &&
-    (r[DATE_FIELD] || "").trim() &&
-    String(r[WORDS_FIELD] || "").trim()
-  );
-  const last = valid.slice(-12); // show at most 12
-  container.innerHTML = last.map(r => {
-    const u = r[USER_FIELD];
-    const d = r[DATE_FIELD];
-    const w = r[WORDS_FIELD];
-    return `<div><strong>${u}</strong> · ${w} · <span class="muted">${d}</span></div>`;
-  }).join("") || '<p class="muted">No recent entries.</p>';
-}
-
+  function renderRecent(rows) {
+    const container = document.getElementById('recentContainer');
+    const valid = rows.filter(r =>
+      (r[USER_FIELD] || "").trim() &&
+      (r[DATE_FIELD] || "").trim() &&
+      String(r[WORDS_FIELD] || "").trim()
+    );
+    const last = valid.slice(-12);
+    container.innerHTML = last.map(r => {
+      const u = r[USER_FIELD];
+      const d = r[DATE_FIELD];
+      const w = r[WORDS_FIELD];
+      const ts = r[TS_FIELD] || "";
+      return `<div><strong>${u}</strong> · ${w} words · <span class="muted">${d}${ts ? " · " + ts : ""}</span></div>`;
+    }).join("") || '<p class="muted">No recent entries.</p>';
+  }
 
   async function loadData() {
-
     return new Promise((resolve, reject) => {
-
       Papa.parse(PUBLISHED_CSV_URL, {
-
         download: true,
-
         header: true,
-
         dynamicTyping: false,
-
-        complete: (result) => resolve(result.data.filter(Boolean)),
-
+        skipEmptyLines: true,
+        complete: (res) => resolve(res.data.filter(Boolean)),
         error: reject
-
       });
-
     });
-
   }
-
 
   async function main() {
-
     document.getElementById('refreshBtn').disabled = true;
-
     try {
+      const rows = await loadData();
+      allRows = rows;
+      const series = groupData(rows);
 
-      allRows = await loadData();
-
-      const series = groupData(allRows);
-
-
-      // Update user select with real names found in data (preserve “All users”)
-
+      // populate user selector
       const sel = document.getElementById('userSelect');
-
-      const current = sel.value;
-
-      const keepAll = sel.querySelector('option[value="__ALL__"]');
-
-      sel.innerHTML = "";
-
-      sel.appendChild(keepAll);
-
+      const current = sel.value || "__ALL__";
+      sel.innerHTML = '<option value="__ALL__">All users</option>';
       Object.keys(series).sort().forEach(u => {
-
         const opt = document.createElement('option');
-
-        opt.value = opt.textContent = u;
-
+        opt.value = u; opt.textContent = u;
         sel.appendChild(opt);
-
       });
-
-      sel.value = current && [...sel.options].some(o => o.value === current) ? current : "__ALL__";
-
+      sel.value = [...sel.options].some(o => o.value === current) ? current : "__ALL__";
 
       renderChart(series, sel.value);
-
       renderTable(series, sel.value);
-
-      renderRecent(allRows);
-
+      renderRecent(rows);
 
       sel.onchange = () => { renderChart(series, sel.value); renderTable(series, sel.value); };
-
     } catch (e) {
-
-      alert("Failed to load data. Check your published CSV URL.");
-
       console.error(e);
-
+      alert("Failed to load data. Check your published CSV URL and column headers.");
     } finally {
-
       document.getElementById('refreshBtn').disabled = false;
-
     }
-
   }
 
-
   document.getElementById('refreshBtn').addEventListener('click', main);
-
   document.getElementById('downloadPngBtn').addEventListener('click', () => {
-
     if (!chart) return;
-
     const link = document.createElement('a');
-
     link.href = chart.toBase64Image('image/png', 1.0);
-
     link.download = 'wordcount.png';
-
     link.click();
-
   });
 
-
+  // Kick off
   main();
-
 </script>
-
 </body>
-
 </html>
-
