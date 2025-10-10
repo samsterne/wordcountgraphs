@@ -1,286 +1,514 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
+
+
+<!doctype html>
+
+<html lang="en">
+
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="2685.1">
-  <style type="text/css">
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
-    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+
+  <meta charset="utf-8" />
+
+  <title>Team Word Counts</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Chart.js & Papa Parse (CSV) from CDN -->
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+  <style>
+
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 2rem; }
+
+    .row { display: grid; gap: 1rem; grid-template-columns: 1fr; max-width: 960px; }
+
+    @media (min-width: 900px){ .row { grid-template-columns: 2fr 1fr; } }
+
+    header { margin-bottom: 1rem; }
+
+    select, button { padding: 0.6rem 0.8rem; }
+
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 1rem; }
+
+    .muted { color:#666; font-size: 0.9rem; }
+
+    .controls { display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center; }
+
+    .grid { display:grid; gap:0.5rem; }
+
+    table { width:100%; border-collapse: collapse; }
+
+    th, td { border-bottom: 1px solid #eee; padding: 0.4rem 0; text-align:left; }
+
+    .pill { display:inline-block; padding:0.2rem 0.5rem; border:1px solid #ddd; border-radius:999px; font-size:0.85rem;}
+
   </style>
+
 </head>
+
 <body>
-<p class="p1">&lt;!doctype html&gt;</p>
-<p class="p1">&lt;html lang="en"&gt;</p>
-<p class="p1">&lt;head&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;meta charset="utf-8" /&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;title&gt;Team Word Counts&lt;/title&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1" /&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;!-- Chart.js &amp; Papa Parse (CSV) from CDN --&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;script src="https://cdn.jsdelivr.net/npm/chart.js"&gt;&lt;/script&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"&gt;&lt;/script&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;style&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 2rem; }</p>
-<p class="p1"><span class="Apple-converted-space">    </span>.row { display: grid; gap: 1rem; grid-template-columns: 1fr; max-width: 960px; }</p>
-<p class="p1"><span class="Apple-converted-space">    </span>@media (min-width: 900px){ .row { grid-template-columns: 2fr 1fr; } }</p>
-<p class="p1"><span class="Apple-converted-space">    </span>header { margin-bottom: 1rem; }</p>
-<p class="p1"><span class="Apple-converted-space">    </span>select, button { padding: 0.6rem 0.8rem; }</p>
-<p class="p1"><span class="Apple-converted-space">    </span>.card { border: 1px solid #ddd; border-radius: 10px; padding: 1rem; }</p>
-<p class="p1"><span class="Apple-converted-space">    </span>.muted { color:#666; font-size: 0.9rem; }</p>
-<p class="p1"><span class="Apple-converted-space">    </span>.controls { display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center; }</p>
-<p class="p1"><span class="Apple-converted-space">    </span>.grid { display:grid; gap:0.5rem; }</p>
-<p class="p1"><span class="Apple-converted-space">    </span>table { width:100%; border-collapse: collapse; }</p>
-<p class="p1"><span class="Apple-converted-space">    </span>th, td { border-bottom: 1px solid #eee; padding: 0.4rem 0; text-align:left; }</p>
-<p class="p1"><span class="Apple-converted-space">    </span>.pill { display:inline-block; padding:0.2rem 0.5rem; border:1px solid #ddd; border-radius:999px; font-size:0.85rem;}</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;/style&gt;</p>
-<p class="p1">&lt;/head&gt;</p>
-<p class="p1">&lt;body&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;header&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;h1&gt;Team Word Counts&lt;/h1&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;p class="muted"&gt;Submit your daily words via the Google Form. Select a user to view their cumulative progress, or “All users” for a comparison.&lt;/p&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;/header&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;div class="row"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="card"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="controls"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;label for="userSelect"&gt;User:&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;select id="userSelect"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>&lt;option value="__ALL__"&gt;All users&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>&lt;!-- Replace with your actual user list for nicer defaults --&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>&lt;option&gt;Alex&lt;/option&gt;&lt;option&gt;Brooke&lt;/option&gt;&lt;option&gt;Casey&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>&lt;option&gt;Dev&lt;/option&gt;&lt;option&gt;Eli&lt;/option&gt;&lt;option&gt;Frankie&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>&lt;option&gt;Harper&lt;/option&gt;&lt;option&gt;Jordan&lt;/option&gt;&lt;option&gt;Kai&lt;/option&gt;&lt;option&gt;Riley&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/select&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;button id="refreshBtn"&gt;Refresh&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;button id="downloadPngBtn"&gt;Download Chart PNG&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;a id="downloadCsvLink" class="pill" href="#" target="_blank" rel="noopener"&gt;Download CSV&lt;/a&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;canvas id="chart" height="120"&gt;&lt;/canvas&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="card"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;h3&gt;Submit Words&lt;/h3&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;p class="muted"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>Use the Google Form to add today’s words. It can take a few seconds to appear here after you submit.</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;/p&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;p&gt;&lt;a id="formLink" href="#" target="_blank" rel="noopener"&gt;Open submission form →&lt;/a&gt;&lt;/p&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;h3 style="margin-top:1.5rem;"&gt;Recent Entries&lt;/h3&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div id="recentContainer" class="grid"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;div class="card" style="margin-top:1rem;"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;h3&gt;Raw Data (active user)&lt;/h3&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="tableContainer"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1">&lt;script&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>// === CONFIG ===</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const PUBLISHED_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQS4yybk3Wsrk3XhQoX-3QA80iWwPZQPjPMTZ5qDMXghIXAPBjdw8ICnCAPOhoxibN48gDDhxjCjULE/pub?gid=1623176752&amp;single=true&amp;output=csv";<span class="Apple-converted-space">  </span>// e.g. https://docs.google.com/spreadsheets/d/e/.../pub?output=csv</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const GOOGLE_FORM_URL <span class="Apple-converted-space">  </span>= "https://docs.google.com/forms/d/e/1FAIpQLScT0CMZIyr5PYM5i3ZkyPmm-sEF0JCjXTFhZwZ88LT3GjEvwg/viewform?usp=sharing&amp;ouid=112161238198849026052";<span class="Apple-converted-space">    </span>// optional: link to your form</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const USER_FIELD<span class="Apple-converted-space">        </span>= "User"; <span class="Apple-converted-space">                        </span>// must match your Form/Sheet header</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const DATE_FIELD<span class="Apple-converted-space">        </span>= "Date"; <span class="Apple-converted-space">                        </span>// can be textual; we'll parse</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const WORDS_FIELD <span class="Apple-converted-space">      </span>= "Words Added Today";<span class="Apple-converted-space">            </span>// numeric field</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('downloadCsvLink').href = PUBLISHED_CSV_URL;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>if (GOOGLE_FORM_URL) document.getElementById('formLink').href = GOOGLE_FORM_URL;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>let allRows = []; <span class="Apple-converted-space">      </span>// parsed CSV rows as objects</p>
-<p class="p1"><span class="Apple-converted-space">  </span>let chart;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>function parseDate(d) {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>// try to parse various date formats</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const try1 = new Date(d);</p>
-<p class="p1"><span class="Apple-converted-space">    </span>if (!isNaN(try1)) return new Date(try1.getFullYear(), try1.getMonth(), try1.getDate());</p>
-<p class="p1"><span class="Apple-converted-space">    </span>// fallback: split yyyy-mm-dd or dd/mm/yyyy</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const m = String(d).match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);</p>
-<p class="p1"><span class="Apple-converted-space">    </span>if (m) return new Date(+m[1], +m[2]-1, +m[3]);</p>
-<p class="p1"><span class="Apple-converted-space">    </span>return null;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>function groupData(rows) {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>// Aggregate by user -&gt; date (sum daily words), then compute cumulative</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const byUser = {};</p>
-<p class="p1"><span class="Apple-converted-space">    </span>rows.forEach(r =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">      </span>const user = (r[USER_FIELD] || "").trim();</p>
-<p class="p1"><span class="Apple-converted-space">      </span>const dt <span class="Apple-converted-space">  </span>= parseDate(r[DATE_FIELD]);</p>
-<p class="p1"><span class="Apple-converted-space">      </span>const add<span class="Apple-converted-space">  </span>= Number(String(r[WORDS_FIELD] || "0").replace(/,/g,""));</p>
-<p class="p1"><span class="Apple-converted-space">      </span>if (!user || !dt || isNaN(add)) return;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>const key = dt.toISOString().slice(0,10);</p>
-<p class="p1"><span class="Apple-converted-space">      </span>byUser[user] ??= {};</p>
-<p class="p1"><span class="Apple-converted-space">      </span>byUser[user][key] = (byUser[user][key] || 0) + add;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>});</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>// Create cumulative arrays per user</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const series = {};</p>
-<p class="p1"><span class="Apple-converted-space">    </span>Object.entries(byUser).forEach(([user, datesObj]) =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">      </span>const dates = Object.keys(datesObj).sort();</p>
-<p class="p1"><span class="Apple-converted-space">      </span>let running = 0;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>series[user] = dates.map(d =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">        </span>running += datesObj[d];</p>
-<p class="p1"><span class="Apple-converted-space">        </span>return { date: d, total: running, added: datesObj[d] };</p>
-<p class="p1"><span class="Apple-converted-space">      </span>});</p>
-<p class="p1"><span class="Apple-converted-space">    </span>});</p>
-<p class="p1"><span class="Apple-converted-space">    </span>return series;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>function buildAllLabels(series) {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>// Union of all dates across users for aligned comparison</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const set = new Set();</p>
-<p class="p1"><span class="Apple-converted-space">    </span>Object.values(series).forEach(arr =&gt; arr.forEach(p =&gt; set.add(p.date)));</p>
-<p class="p1"><span class="Apple-converted-space">    </span>return Array.from(set).sort();</p>
-<p class="p1"><span class="Apple-converted-space">  </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>function toDataset(user, labels, series, color) {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const map = new Map((series[user]||[]).map(p =&gt; [p.date, p.total]));</p>
-<p class="p1"><span class="Apple-converted-space">    </span>return labels.map(d =&gt; map.get(d) ?? null);</p>
-<p class="p1"><span class="Apple-converted-space">  </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>function pickColor(i) {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const palette = [</p>
-<p class="p1"><span class="Apple-converted-space">      </span>"#2563eb","#16a34a","#f59e0b","#ef4444","#7c3aed",</p>
-<p class="p1"><span class="Apple-converted-space">      </span>"#0ea5e9","#f97316","#22c55e","#eab308","#a855f7"</p>
-<p class="p1"><span class="Apple-converted-space">    </span>];</p>
-<p class="p1"><span class="Apple-converted-space">    </span>return palette[i % palette.length];</p>
-<p class="p1"><span class="Apple-converted-space">  </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>function renderChart(series, selectedUser="__ALL__") {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const ctx = document.getElementById('chart').getContext('2d');</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>if (chart) chart.destroy();</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>let labels;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>let datasets = [];</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>const users = Object.keys(series).sort();</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>if (selectedUser === "__ALL__") {</p>
-<p class="p1"><span class="Apple-converted-space">      </span>labels = buildAllLabels(series);</p>
-<p class="p1"><span class="Apple-converted-space">      </span>users.forEach((u, i) =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">        </span>datasets.push({</p>
-<p class="p1"><span class="Apple-converted-space">          </span>label: u,</p>
-<p class="p1"><span class="Apple-converted-space">          </span>data: toDataset(u, labels, series),</p>
-<p class="p1"><span class="Apple-converted-space">          </span>borderColor: pickColor(i),</p>
-<p class="p1"><span class="Apple-converted-space">          </span>backgroundColor: "transparent",</p>
-<p class="p1"><span class="Apple-converted-space">          </span>borderWidth: 2,</p>
-<p class="p1"><span class="Apple-converted-space">          </span>spanGaps: true,</p>
-<p class="p1"><span class="Apple-converted-space">          </span>tension: 0.2</p>
-<p class="p1"><span class="Apple-converted-space">        </span>});</p>
-<p class="p1"><span class="Apple-converted-space">      </span>});</p>
-<p class="p1"><span class="Apple-converted-space">    </span>} else {</p>
-<p class="p1"><span class="Apple-converted-space">      </span>labels = (series[selectedUser] || []).map(p =&gt; p.date);</p>
-<p class="p1"><span class="Apple-converted-space">      </span>datasets = [{</p>
-<p class="p1"><span class="Apple-converted-space">        </span>label: selectedUser,</p>
-<p class="p1"><span class="Apple-converted-space">        </span>data: (series[selectedUser] || []).map(p =&gt; p.total),</p>
-<p class="p1"><span class="Apple-converted-space">        </span>borderColor: pickColor(0),</p>
-<p class="p1"><span class="Apple-converted-space">        </span>backgroundColor: "transparent",</p>
-<p class="p1"><span class="Apple-converted-space">        </span>borderWidth: 3,</p>
-<p class="p1"><span class="Apple-converted-space">        </span>tension: 0.2</p>
-<p class="p1"><span class="Apple-converted-space">      </span>}];</p>
-<p class="p1"><span class="Apple-converted-space">    </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>chart = new Chart(ctx, {</p>
-<p class="p1"><span class="Apple-converted-space">      </span>type: 'line',</p>
-<p class="p1"><span class="Apple-converted-space">      </span>data: { labels, datasets },</p>
-<p class="p1"><span class="Apple-converted-space">      </span>options: {</p>
-<p class="p1"><span class="Apple-converted-space">        </span>responsive: true,</p>
-<p class="p1"><span class="Apple-converted-space">        </span>maintainAspectRatio: false,</p>
-<p class="p1"><span class="Apple-converted-space">        </span>scales: {</p>
-<p class="p1"><span class="Apple-converted-space">          </span>x: { ticks: { maxRotation: 0, autoSkip: true } },</p>
-<p class="p1"><span class="Apple-converted-space">          </span>y: { beginAtZero: true, ticks: { stepSize: 1000 } }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>},</p>
-<p class="p1"><span class="Apple-converted-space">        </span>plugins: {</p>
-<p class="p1"><span class="Apple-converted-space">          </span>legend: { display: true }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">      </span>}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>});</p>
-<p class="p1"><span class="Apple-converted-space">  </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>function renderTable(series, user) {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const container = document.getElementById('tableContainer');</p>
-<p class="p1"><span class="Apple-converted-space">    </span>if (user === "__ALL__" || !series[user] || series[user].length === 0) {</p>
-<p class="p1"><span class="Apple-converted-space">      </span>container.innerHTML = '&lt;p class="muted"&gt;Select a user to see their raw entries.&lt;/p&gt;';</p>
-<p class="p1"><span class="Apple-converted-space">      </span>return;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const rows = series[user].map(p =&gt; `&lt;tr&gt;&lt;td&gt;${p.date}&lt;/td&gt;&lt;td&gt;${p.added}&lt;/td&gt;&lt;td&gt;${p.total}&lt;/td&gt;&lt;/tr&gt;`).join("");</p>
-<p class="p1"><span class="Apple-converted-space">    </span>container.innerHTML = `</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;table&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Date&lt;/th&gt;&lt;th&gt;Added&lt;/th&gt;&lt;th&gt;Cumulative&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;tbody&gt;${rows}&lt;/tbody&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;/table&gt;`;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>function renderRecent(rows) {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>// show last 8 submissions (by sheet order—often newest last; adjust if needed)</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const container = document.getElementById('recentContainer');</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const last = rows.slice(-8);</p>
-<p class="p1"><span class="Apple-converted-space">    </span>container.innerHTML = last.map(r =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">      </span>const u = r[USER_FIELD] || "?";</p>
-<p class="p1"><span class="Apple-converted-space">      </span>const d = r[DATE_FIELD] || "?";</p>
-<p class="p1"><span class="Apple-converted-space">      </span>const w = r[WORDS_FIELD] || "0";</p>
-<p class="p1"><span class="Apple-converted-space">      </span>return `&lt;div&gt;&lt;strong&gt;${u}&lt;/strong&gt; · ${w} words · &lt;span class="muted"&gt;${d}&lt;/span&gt;&lt;/div&gt;`;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>}).join("");</p>
-<p class="p1"><span class="Apple-converted-space">  </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>async function loadData() {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>return new Promise((resolve, reject) =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">      </span>Papa.parse(PUBLISHED_CSV_URL, {</p>
-<p class="p1"><span class="Apple-converted-space">        </span>download: true,</p>
-<p class="p1"><span class="Apple-converted-space">        </span>header: true,</p>
-<p class="p1"><span class="Apple-converted-space">        </span>dynamicTyping: false,</p>
-<p class="p1"><span class="Apple-converted-space">        </span>complete: (result) =&gt; resolve(result.data.filter(Boolean)),</p>
-<p class="p1"><span class="Apple-converted-space">        </span>error: reject</p>
-<p class="p1"><span class="Apple-converted-space">      </span>});</p>
-<p class="p1"><span class="Apple-converted-space">    </span>});</p>
-<p class="p1"><span class="Apple-converted-space">  </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>async function main() {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById('refreshBtn').disabled = true;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>try {</p>
-<p class="p1"><span class="Apple-converted-space">      </span>allRows = await loadData();</p>
-<p class="p1"><span class="Apple-converted-space">      </span>const series = groupData(allRows);</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>// Update user select with real names found in data (preserve “All users”)</p>
-<p class="p1"><span class="Apple-converted-space">      </span>const sel = document.getElementById('userSelect');</p>
-<p class="p1"><span class="Apple-converted-space">      </span>const current = sel.value;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>const keepAll = sel.querySelector('option[value="__ALL__"]');</p>
-<p class="p1"><span class="Apple-converted-space">      </span>sel.innerHTML = "";</p>
-<p class="p1"><span class="Apple-converted-space">      </span>sel.appendChild(keepAll);</p>
-<p class="p1"><span class="Apple-converted-space">      </span>Object.keys(series).sort().forEach(u =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const opt = document.createElement('option');</p>
-<p class="p1"><span class="Apple-converted-space">        </span>opt.value = opt.textContent = u;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>sel.appendChild(opt);</p>
-<p class="p1"><span class="Apple-converted-space">      </span>});</p>
-<p class="p1"><span class="Apple-converted-space">      </span>sel.value = current &amp;&amp; [...sel.options].some(o =&gt; o.value === current) ? current : "__ALL__";</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>renderChart(series, sel.value);</p>
-<p class="p1"><span class="Apple-converted-space">      </span>renderTable(series, sel.value);</p>
-<p class="p1"><span class="Apple-converted-space">      </span>renderRecent(allRows);</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>sel.onchange = () =&gt; { renderChart(series, sel.value); renderTable(series, sel.value); };</p>
-<p class="p1"><span class="Apple-converted-space">    </span>} catch (e) {</p>
-<p class="p1"><span class="Apple-converted-space">      </span>alert("Failed to load data. Check your published CSV URL.");</p>
-<p class="p1"><span class="Apple-converted-space">      </span>console.error(e);</p>
-<p class="p1"><span class="Apple-converted-space">    </span>} finally {</p>
-<p class="p1"><span class="Apple-converted-space">      </span>document.getElementById('refreshBtn').disabled = false;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>}</p>
-<p class="p1"><span class="Apple-converted-space">  </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('refreshBtn').addEventListener('click', main);</p>
-<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('downloadPngBtn').addEventListener('click', () =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>if (!chart) return;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const link = document.createElement('a');</p>
-<p class="p1"><span class="Apple-converted-space">    </span>link.href = chart.toBase64Image('image/png', 1.0);</p>
-<p class="p1"><span class="Apple-converted-space">    </span>link.download = 'wordcount.png';</p>
-<p class="p1"><span class="Apple-converted-space">    </span>link.click();</p>
-<p class="p1"><span class="Apple-converted-space">  </span>});</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>main();</p>
-<p class="p1">&lt;/script&gt;</p>
-<p class="p1">&lt;/body&gt;</p>
-<p class="p1">&lt;/html&gt;</p>
+
+  <header>
+
+    <h1>Team Word Counts</h1>
+
+    <p class="muted">Submit your daily words via the Google Form. Select a user to view their cumulative progress, or “All users” for a comparison.</p>
+
+  </header>
+
+
+  <div class="row">
+
+    <div class="card">
+
+      <div class="controls">
+
+        <label for="userSelect">User:</label>
+
+        <select id="userSelect">
+
+          <option value="__ALL__">All users</option>
+
+          <!-- Replace with your actual user list for nicer defaults -->
+
+          <option>Alex</option><option>Brooke</option><option>Casey</option>
+
+          <option>Dev</option><option>Eli</option><option>Frankie</option>
+
+          <option>Harper</option><option>Jordan</option><option>Kai</option><option>Riley</option>
+
+        </select>
+
+        <button id="refreshBtn">Refresh</button>
+
+        <button id="downloadPngBtn">Download Chart PNG</button>
+
+        <a id="downloadCsvLink" class="pill" href="#" target="_blank" rel="noopener">Download CSV</a>
+
+      </div>
+
+      <canvas id="chart" height="120"></canvas>
+
+    </div>
+
+
+    <div class="card">
+
+      <h3>Submit Words</h3>
+
+      <p class="muted">
+
+        Use the Google Form to add today’s words. It can take a few seconds to appear here after you submit.
+
+      </p>
+
+      <p><a id="formLink" href="#" target="_blank" rel="noopener">Open submission form →</a></p>
+
+
+      <h3 style="margin-top:1.5rem;">Recent Entries</h3>
+
+      <div id="recentContainer" class="grid"></div>
+
+    </div>
+
+  </div>
+
+
+  <div class="card" style="margin-top:1rem;">
+
+    <h3>Raw Data (active user)</h3>
+
+    <div id="tableContainer"></div>
+
+  </div>
+
+
+<script>
+
+  // === CONFIG ===
+
+  const PUBLISHED_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQS4yybk3Wsrk3XhQoX-3QA80iWwPZQPjPMTZ5qDMXghIXAPBjdw8ICnCAPOhoxibN48gDDhxjCjULE/pub?gid=1623176752&single=true&output=csv";  // e.g. https://docs.google.com/spreadsheets/d/e/.../pub?output=csv
+
+  const GOOGLE_FORM_URL   = "https://docs.google.com/forms/d/e/1FAIpQLScT0CMZIyr5PYM5i3ZkyPmm-sEF0JCjXTFhZwZ88LT3GjEvwg/viewform?usp=sharing&ouid=112161238198849026052";    // optional: link to your form
+
+  const USER_FIELD        = "User";                         // must match your Form/Sheet header
+
+  const DATE_FIELD        = "Date";                         // can be textual; we'll parse
+
+  const WORDS_FIELD       = "Words Added Today";            // numeric field
+
+
+  document.getElementById('downloadCsvLink').href = PUBLISHED_CSV_URL;
+
+  if (GOOGLE_FORM_URL) document.getElementById('formLink').href = GOOGLE_FORM_URL;
+
+
+  let allRows = [];       // parsed CSV rows as objects
+
+  let chart;
+
+
+  function parseDate(d) {
+
+    // try to parse various date formats
+
+    const try1 = new Date(d);
+
+    if (!isNaN(try1)) return new Date(try1.getFullYear(), try1.getMonth(), try1.getDate());
+
+    // fallback: split yyyy-mm-dd or dd/mm/yyyy
+
+    const m = String(d).match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+
+    if (m) return new Date(+m[1], +m[2]-1, +m[3]);
+
+    return null;
+
+  }
+
+
+  function groupData(rows) {
+
+    // Aggregate by user -> date (sum daily words), then compute cumulative
+
+    const byUser = {};
+
+    rows.forEach(r => {
+
+      const user = (r[USER_FIELD] || "").trim();
+
+      const dt   = parseDate(r[DATE_FIELD]);
+
+      const add  = Number(String(r[WORDS_FIELD] || "0").replace(/,/g,""));
+
+      if (!user || !dt || isNaN(add)) return;
+
+      const key = dt.toISOString().slice(0,10);
+
+      byUser[user] ??= {};
+
+      byUser[user][key] = (byUser[user][key] || 0) + add;
+
+    });
+
+
+    // Create cumulative arrays per user
+
+    const series = {};
+
+    Object.entries(byUser).forEach(([user, datesObj]) => {
+
+      const dates = Object.keys(datesObj).sort();
+
+      let running = 0;
+
+      series[user] = dates.map(d => {
+
+        running += datesObj[d];
+
+        return { date: d, total: running, added: datesObj[d] };
+
+      });
+
+    });
+
+    return series;
+
+  }
+
+
+  function buildAllLabels(series) {
+
+    // Union of all dates across users for aligned comparison
+
+    const set = new Set();
+
+    Object.values(series).forEach(arr => arr.forEach(p => set.add(p.date)));
+
+    return Array.from(set).sort();
+
+  }
+
+
+  function toDataset(user, labels, series, color) {
+
+    const map = new Map((series[user]||[]).map(p => [p.date, p.total]));
+
+    return labels.map(d => map.get(d) ?? null);
+
+  }
+
+
+  function pickColor(i) {
+
+    const palette = [
+
+      "#2563eb","#16a34a","#f59e0b","#ef4444","#7c3aed",
+
+      "#0ea5e9","#f97316","#22c55e","#eab308","#a855f7"
+
+    ];
+
+    return palette[i % palette.length];
+
+  }
+
+
+  function renderChart(series, selectedUser="__ALL__") {
+
+    const ctx = document.getElementById('chart').getContext('2d');
+
+
+    if (chart) chart.destroy();
+
+
+    let labels;
+
+    let datasets = [];
+
+
+    const users = Object.keys(series).sort();
+
+
+    if (selectedUser === "__ALL__") {
+
+      labels = buildAllLabels(series);
+
+      users.forEach((u, i) => {
+
+        datasets.push({
+
+          label: u,
+
+          data: toDataset(u, labels, series),
+
+          borderColor: pickColor(i),
+
+          backgroundColor: "transparent",
+
+          borderWidth: 2,
+
+          spanGaps: true,
+
+          tension: 0.2
+
+        });
+
+      });
+
+    } else {
+
+      labels = (series[selectedUser] || []).map(p => p.date);
+
+      datasets = [{
+
+        label: selectedUser,
+
+        data: (series[selectedUser] || []).map(p => p.total),
+
+        borderColor: pickColor(0),
+
+        backgroundColor: "transparent",
+
+        borderWidth: 3,
+
+        tension: 0.2
+
+      }];
+
+    }
+
+
+    chart = new Chart(ctx, {
+
+      type: 'line',
+
+      data: { labels, datasets },
+
+      options: {
+
+        responsive: true,
+
+        maintainAspectRatio: false,
+
+        scales: {
+
+          x: { ticks: { maxRotation: 0, autoSkip: true } },
+
+          y: { beginAtZero: true, ticks: { stepSize: 1000 } }
+
+        },
+
+        plugins: {
+
+          legend: { display: true }
+
+        }
+
+      }
+
+    });
+
+  }
+
+
+  function renderTable(series, user) {
+
+    const container = document.getElementById('tableContainer');
+
+    if (user === "__ALL__" || !series[user] || series[user].length === 0) {
+
+      container.innerHTML = '<p class="muted">Select a user to see their raw entries.</p>';
+
+      return;
+
+    }
+
+    const rows = series[user].map(p => `<tr><td>${p.date}</td><td>${p.added}</td><td>${p.total}</td></tr>`).join("");
+
+    container.innerHTML = `
+
+      <table>
+
+        <thead><tr><th>Date</th><th>Added</th><th>Cumulative</th></tr></thead>
+
+        <tbody>${rows}</tbody>
+
+      </table>`;
+
+  }
+
+
+  function renderRecent(rows) {
+
+    // show last 8 submissions (by sheet order—often newest last; adjust if needed)
+
+    const container = document.getElementById('recentContainer');
+
+    const last = rows.slice(-8);
+
+    container.innerHTML = last.map(r => {
+
+      const u = r[USER_FIELD] || "?";
+
+      const d = r[DATE_FIELD] || "?";
+
+      const w = r[WORDS_FIELD] || "0";
+
+      return `<div><strong>${u}</strong> · ${w} words · <span class="muted">${d}</span></div>`;
+
+    }).join("");
+
+  }
+
+
+  async function loadData() {
+
+    return new Promise((resolve, reject) => {
+
+      Papa.parse(PUBLISHED_CSV_URL, {
+
+        download: true,
+
+        header: true,
+
+        dynamicTyping: false,
+
+        complete: (result) => resolve(result.data.filter(Boolean)),
+
+        error: reject
+
+      });
+
+    });
+
+  }
+
+
+  async function main() {
+
+    document.getElementById('refreshBtn').disabled = true;
+
+    try {
+
+      allRows = await loadData();
+
+      const series = groupData(allRows);
+
+
+      // Update user select with real names found in data (preserve “All users”)
+
+      const sel = document.getElementById('userSelect');
+
+      const current = sel.value;
+
+      const keepAll = sel.querySelector('option[value="__ALL__"]');
+
+      sel.innerHTML = "";
+
+      sel.appendChild(keepAll);
+
+      Object.keys(series).sort().forEach(u => {
+
+        const opt = document.createElement('option');
+
+        opt.value = opt.textContent = u;
+
+        sel.appendChild(opt);
+
+      });
+
+      sel.value = current && [...sel.options].some(o => o.value === current) ? current : "__ALL__";
+
+
+      renderChart(series, sel.value);
+
+      renderTable(series, sel.value);
+
+      renderRecent(allRows);
+
+
+      sel.onchange = () => { renderChart(series, sel.value); renderTable(series, sel.value); };
+
+    } catch (e) {
+
+      alert("Failed to load data. Check your published CSV URL.");
+
+      console.error(e);
+
+    } finally {
+
+      document.getElementById('refreshBtn').disabled = false;
+
+    }
+
+  }
+
+
+  document.getElementById('refreshBtn').addEventListener('click', main);
+
+  document.getElementById('downloadPngBtn').addEventListener('click', () => {
+
+    if (!chart) return;
+
+    const link = document.createElement('a');
+
+    link.href = chart.toBase64Image('image/png', 1.0);
+
+    link.download = 'wordcount.png';
+
+    link.click();
+
+  });
+
+
+  main();
+
+</script>
+
 </body>
+
 </html>
+
