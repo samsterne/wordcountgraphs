@@ -372,27 +372,21 @@ function groupData(rows) {
   }
 
 
-  function renderRecent(rows) {
-
-    // show last 8 submissions (by sheet order—often newest last; adjust if needed)
-
-    const container = document.getElementById('recentContainer');
-
-    const last = rows.slice(-8);
-
-    container.innerHTML = last.map(r => {
-
-      const u = r[USER_FIELD] || "?";
-
-      const d = r[DATE_FIELD] || "?";
-
-      const w = r[WORDS_FIELD] || "0";
-
-      return `<div><strong>${u}</strong> · ${w} words · <span class="muted">${d}</span></div>`;
-
-    }).join("");
-
-  }
+function renderRecent(rows) {
+  const container = document.getElementById('recentContainer');
+  const valid = rows.filter(r =>
+    (r[USER_FIELD] || "").trim() &&
+    (r[DATE_FIELD] || "").trim() &&
+    String(r[WORDS_FIELD] || "").trim()
+  );
+  const last = valid.slice(-12); // show at most 12
+  container.innerHTML = last.map(r => {
+    const u = r[USER_FIELD];
+    const d = r[DATE_FIELD];
+    const w = r[WORDS_FIELD];
+    return `<div><strong>${u}</strong> · ${w} · <span class="muted">${d}</span></div>`;
+  }).join("") || '<p class="muted">No recent entries.</p>';
+}
 
 
   async function loadData() {
