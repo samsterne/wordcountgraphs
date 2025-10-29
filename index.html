@@ -26,6 +26,12 @@
     canvas#chart { width: 100% !important; height: 100% !important; display: block; }
     table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
     th, td { padding: 6px 8px; border-bottom: 1px solid #eee; text-align: left; }
+    .kpis { margin-top: 12px; display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; }
+    .kpi { border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 12px; background: #fafafa; }
+    .kpi h4 { margin: 0 0 4px; font-size: 0.95rem; }
+    .kpi .big { font-size: 1.25rem; font-weight: 700; }
+    .kpi .sub { color: #666; font-size: 0.85rem; }
+    @media (max-width: 520px) { .kpis { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -63,6 +69,7 @@
   <div class="card" style="max-width: 960px; margin: 16px auto 0;">
     <h3>Raw Data (selected user)</h3>
     <div id="tableContainer"><p class="muted">Select a user to see entries.</p></div>
+    <div id="projectionBox" class="kpis" style="display:none;"></div>
   </div>
 
 <script>
@@ -106,6 +113,8 @@
   function isoYYYYMMDD_UTC(dateObj) {
     return dateObj.toISOString().slice(0,10); // YYYY-MM-DD
   }
+
+  function ceilToInt(n) { return Math.max(0, Math.ceil(n)); }
 
   function numify(x) {
     if (x == null) return NaN;
@@ -279,6 +288,60 @@
       </table>`;
   }
 
+  // NEW: Projection box for needed words/day to hit goals
+  function renderProjection(series, user) {
+    const box = document.getElementById('projectionBox');
+
+    // Hide for "All users" or if no data
+    if (user === "__ALL__" || !series[user] || series[user].length === 0) {
+      box.style.display = 'none';
+      box.innerHTML = '';
+      return;
+    }
+
+    // Current total for the selected user
+    const pts = series[user];
+    const currentTotal = pts[pts.length - 1].total || 0;
+
+    // Use the same goal window as the chart (keep these in sync with renderChart)
+    const startUTC = makeUTCDate(2025, 10, 1, 12); // NOTE: months are 0-based (this is Nov 1, 2025)
+    const endUTC   = makeUTCDate(2025, 11, 1, 12); // Dec 1, 2025 at 12:00 UTC
+
+    // "Today" at 12:00 UTC (avoid DST weirdness)
+    const now = new Date();
+    const todayUTC = makeUTCDate(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 12);
+
+    // If challenge ended, just show a small note
+    if (todayUTC > endUTC) {
+      box.style.display = '';
+      box.innerHTML = `
+        <div class="kpi"><div class="sub">Challenge window ended on ${isoYYYYMMDD_UTC(endUTC)}</div></div>
+      `;
+      return;
+    }
+
+    // Days left (including today → inclusive window); never 0 to avoid /0
+    const msDay = 24 * 60 * 60 * 1000;
+    const daysLeft = Math.max(1, Math.ceil((endUTC - todayUTC) / msDay));
+
+    const goals = [15000, 25000, 50000];
+    const cards = goals.map(goal => {
+      const remaining = Math.max(0, goal - currentTotal);
+      const perDay = remaining === 0 ? 0 : ceilToInt(remaining / daysLeft);
+      return `
+        <div class="kpi">
+          <h4>Goal ${goal.toLocaleString()}</h4>
+          <div class="big">${perDay.toLocaleString()} / day</div>
+          <div class="sub">${remaining.toLocaleString()} left · ${daysLeft} day${daysLeft===1?'':'s'} remaining</div>
+        </div>
+      `;
+    }).join('');
+
+    box.style.display = '';
+    box.innerHTML = cards;
+  }
+
+
   function renderRecent(rows) {
     const container = document.getElementById('recentContainer');
     const valid = rows.filter(r =>
@@ -329,9 +392,10 @@
 
       renderChart(series, sel.value);
       renderTable(series, sel.value);
+      renderProjection(series, sel.value);
       renderRecent(rows);
 
-      sel.onchange = () => { renderChart(series, sel.value); renderTable(series, sel.value); };
+      sel.onchange = () => { renderChart(series, sel.value); renderTable(series, sel.value); renderProjection(series, sel.value);};
     } catch (e) {
       console.error(e);
       alert("Failed to load data. Check your published CSV URL and column headers.");
