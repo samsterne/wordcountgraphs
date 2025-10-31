@@ -349,7 +349,7 @@
       (r[DATE_FIELD] || "").trim() &&
       String(r[WORDS_FIELD] || "").trim()
     );
-    const last = valid.slice(-12);
+    const last = valid.slice(-5);
     container.innerHTML = last.map(r => {
       const u = r[USER_FIELD];
       const d = r[DATE_FIELD];
